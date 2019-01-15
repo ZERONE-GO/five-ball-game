@@ -1,0 +1,15 @@
+.label {
+    flex: 1 1 200px;
+    display: flex;
+}
+
+.label-name {
+    vertical-align: top;
+    padding: 4px 8px 4px 4px;
+}
+
+.label-value {
+    flex: 1;
+    font-size: 2.1rem;
+    color: #2A8FBD;
+}

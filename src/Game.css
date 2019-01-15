@@ -1,0 +1,28 @@
+.game {
+  background-color: #ffffff;
+  display: inline-block;
+  padding:16px 8px;
+}
+
+.head {
+  display: flex;
+  padding: 4px;
+}
+
+.footer {
+  display: flex;
+  padding: 4px;
+  margin-top: 8px;
+}
+
+.copyright {
+    flex: 1;
+    font-size: 13px;
+    text-align: center;
+    line-height: 26px;
+}
+
+.undo {
+    flex: 1;
+}
+
