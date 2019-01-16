@@ -1,8 +1,9 @@
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+七彩连珠的小游戏，采用React JS编写，主要用于熟悉React的语法。
 
-## Available Scripts
+![](https://github.com/ZERONE-GO/five-ball-game/blob/master/five-ball.png)
 
-In the project directory, you can run:
+主要功能模块：
+1. 寻址算法采用A*算法。
 
 ### `npm start`
 
