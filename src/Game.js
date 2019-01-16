@@ -26,6 +26,7 @@ class Game extends React.Component {
     this.selected = this.selected.bind(this);
     this.move = this.move.bind(this);
     this.movePiece = this.movePiece.bind(this);
+    this.reset = this.reset.bind(this);
   }
 
   componentDidMount() {
@@ -73,10 +74,11 @@ class Game extends React.Component {
       });
     } else {
       clearInterval(this.interval);
-      let balls = this.checkBingo();
+      let grid = this.state.grid.slice();
+      let dest = this.state.dest;
+      let balls = this.checkBingo(grid, dest);
       if (balls <= 0) {
         let nexts = this.state.nexts.slice();
-        let grid = this.state.grid.slice();
         this.pushNewBalls(grid, nexts);
       }
     }
@@ -104,9 +106,7 @@ class Game extends React.Component {
     this.interval = setInterval(this.movePiece, 100);
   }
 
-  checkBingo() {
-    let grid = this.state.grid.slice();
-    let dest = this.state.dest;
+  checkBingo(grid, dest) {
     let lines = this.calculateBalls(grid, dest, this.state.size);
     let bingo = false;
     let fadeOut = Array();
@@ -246,6 +246,22 @@ class Game extends React.Component {
     });
   }
 
+  reset() {
+    let size = this.state.size;
+    this.setState({
+      score: 0,
+      active: -1,
+      dest: -1,
+      fadeOut: Array(),
+      path: Array()
+    });
+    let grid = Array(size * size).fill(0);
+    let nexts = this.randomBalls();
+    let balls = 0;
+
+    this.pushNewBalls(grid, nexts, balls);
+  }
+
   render() {
     const nexts = this.state.nexts;
     const grid = this.state.grid;
@@ -261,7 +277,7 @@ class Game extends React.Component {
         <div className="footer">
           <Button name="UNDO" />
           <div className="copyright"> CopyRight * Made by Zeron </div>
-          <Button name="RESET" />
+          <Button name="RESET" reset={this.reset} />
         </div>
       </div>
     );
