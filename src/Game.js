@@ -10,7 +10,7 @@ class Game extends React.Component {
 
   constructor() {
     super();
-    const size = 12;
+    const size = 9;
     this.state = {
       size: size,
       balls: 0,
