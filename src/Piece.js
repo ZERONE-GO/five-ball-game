@@ -3,10 +3,6 @@ import './Piece.css';
 
 class Piece extends React.Component {
 
-    handleClick() {
-        this.props.selected && this.props.selected(this.props.pos);
-    }
-
     render() {
         const active = this.props.pos === this.props.active ? " active" : "";
         let fadeOut = "";
@@ -19,7 +15,7 @@ class Piece extends React.Component {
         });
 
         return (
-            <div className={"piece color" + this.props.value + active + fadeOut} onClick = {() => this.handleClick()}></div>
+            <div className={"piece color" + this.props.value + active + fadeOut}></div>
         );
     }
 
