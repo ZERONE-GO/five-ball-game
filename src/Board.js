@@ -8,7 +8,7 @@ class Board extends React.Component {
         const boardRows = Array(this.props.size);
 
         for (var i = 0; i < this.props.size; i++) {
-            boardRows[i] = <BoardRow key={i} row={i} size={this.props.size} grid={this.props.grid} fadeOut={this.props.fadeOut} active={this.props.active} selected={this.props.selected} move={this.props.move} />
+            boardRows[i] = <BoardRow key={i} row={i} size={this.props.size} grid={this.props.grid} fadeOut={this.props.fadeOut} active={this.props.active} onAction={this.props.onAction} />
         }
 
         return (

@@ -51,6 +51,7 @@ export function validPath(pos, dest, size, grid) {
 
         if (node.pos === dest) {
             access = true;
+            break;
         }
 
         // row

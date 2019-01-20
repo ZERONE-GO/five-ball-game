@@ -10,7 +10,7 @@ class Game extends React.Component {
 
   constructor() {
     super();
-    const size = 9;
+    const size = 12;
     this.state = {
       size: size,
       balls: 0,
@@ -24,7 +24,7 @@ class Game extends React.Component {
     };
 
     this.selected = this.selected.bind(this);
-    this.move = this.move.bind(this);
+    this.onAction = this.onAction.bind(this);
     this.movePiece = this.movePiece.bind(this);
     this.reset = this.reset.bind(this);
   }
@@ -51,11 +51,9 @@ class Game extends React.Component {
   }
 
   selected(pos) {
-    if (this.state.grid[pos] !== 0) {
-      this.setState({
-        active: pos
-      });
-    }
+    this.setState({
+      active: pos
+    });
   }
 
   movePiece() {
@@ -84,8 +82,16 @@ class Game extends React.Component {
     }
   }
 
-  move(dest) {
-    if (this.state.active <= -1 || this.state.grid[dest] !== 0) {
+  onAction(dest) {
+    if (this.state.path.length > 0) {
+      return;
+    }
+
+    if (this.state.grid[dest] !== 0) {
+      this.selected(dest);
+    }
+
+    if (this.state.active <= -1) {
       return;
     }
 
@@ -235,15 +241,13 @@ class Game extends React.Component {
     position.forEach(pos => {
       balls -= this.checkBingo(grid, pos);
     });
-
-    balls = balls + this.state.balls;
     nexts = this.randomBalls();
-    this.setState({
+    this.setState((prevState, props) => ({
       nexts: nexts,
       grid: grid,
-      balls: balls,
+      balls: prevState.balls + balls,
       active: -1
-    });
+    }));
   }
 
   reset() {
@@ -253,13 +257,13 @@ class Game extends React.Component {
       active: -1,
       dest: -1,
       fadeOut: Array(),
-      path: Array()
+      path: Array(),
+      balls: 0
     });
     let grid = Array(size * size).fill(0);
     let nexts = this.randomBalls();
-    let balls = 0;
 
-    this.pushNewBalls(grid, nexts, balls);
+    this.pushNewBalls(grid, nexts);
   }
 
   render() {
@@ -273,7 +277,7 @@ class Game extends React.Component {
           <Mooe nexts={nexts} />
           <Label name="Score" value = {this.state.score} />
         </div>
-        <Board grid={grid} fadeOut={this.state.fadeOut} size = {this.state.size} active={this.state.active} selected={this.selected} move={this.move} />
+        <Board grid={grid} fadeOut={this.state.fadeOut} size = {this.state.size} active={this.state.active} onAction={this.onAction} />
         <div className="footer">
           <Button name="UNDO" />
           <div className="copyright"> CopyRight * Made by Zeron </div>
