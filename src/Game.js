@@ -10,18 +10,7 @@ class Game extends React.Component {
 
   constructor() {
     super();
-    const size = 9;
-    this.state = {
-      size: size,
-      balls: 0,
-      score: 0,
-      grid: Array(size * size).fill(0),
-      nexts: this.randomBalls(),
-      active: -1,
-      dest: -1,
-      fadeOut: Array(),
-      path: Array()
-    };
+    this.state = this.initState();
 
     this.selected = this.selected.bind(this);
     this.onAction = this.onAction.bind(this);
@@ -30,45 +19,53 @@ class Game extends React.Component {
   }
 
   componentDidMount() {
-    let grid = this.state.grid.slice();
-    let nexts = this.state.nexts.slice();
-    let balls = this.state.balls;
-
-    this.pushNewBalls(grid, nexts, balls);
+    this.setState(this.pushBalls);
   }
 
   componentWillUnmount() {
     this.timer && clearTimeout(this.timer);
   }
 
-  randomBalls() {
-    return [Math.floor(1 + Math.random() * 7), Math.floor(1 + Math.random() * 7), Math.floor(1 + Math.random() * 7)];
-  }
-
-  randomPosition() {
-    const empty = this.state.size * this.state.size - this.state.balls;
-    return [Math.floor(1 + Math.random() * empty), Math.floor(1 + Math.random() * (empty - 1)), Math.floor(1 + Math.random() * (empty - 2))];
+  initState() {
+    const size = 10;
+    return {
+      size: size,
+      balls: 0,
+      score: 0,
+      grid: Array(size * size).fill(0),
+      nexts: utils.randomBalls(),
+      active: -1,
+      dest: -1,
+      fadeOut: [],
+      path: [],
+      history: []
+    };
   }
 
   selected(pos) {
-    this.setState({
-      active: pos
-    });
+    if (pos !== this.state.active) {
+      this.setState({
+        active: pos
+      });
+    }
   }
 
   movePiece() {
     if (this.state.path.length > 0) {
-      let path = this.state.path.slice();
-      let grid = this.state.grid.slice();
-      let active = this.state.active;
+      this.setState(function(prevState, props) {
+        let path = prevState.path.slice();
+        let grid = prevState.grid.slice();
+        let active = prevState.active;
 
-      let step = path.pop();
-      grid[step] = grid[active];
-      grid[active] = 0;
-      this.setState({
-        grid: grid,
-        active: step,
-        path: path
+        let step = path.pop();
+        grid[step] = grid[active];
+        grid[active] = 0;
+
+        return {
+          grid: grid,
+          active: step,
+          path: path
+        };
       });
     } else {
       clearInterval(this.interval);
@@ -76,8 +73,7 @@ class Game extends React.Component {
       let dest = this.state.dest;
       let balls = this.checkBingo(grid, dest);
       if (balls <= 0) {
-        let nexts = this.state.nexts.slice();
-        this.pushNewBalls(grid, nexts);
+        this.setState(this.pushBalls);
       }
     }
   }
@@ -89,33 +85,55 @@ class Game extends React.Component {
 
     if (this.state.grid[dest] !== 0) {
       this.selected(dest);
+      return;
     }
 
     if (this.state.active <= -1) {
       return;
     }
 
-    let valid = utils.validPath(this.state.active, dest, this.state.size, this.state.grid);
+    let valid = utils.findPath(this.state.active, dest, this.state.size, this.state.grid);
     if (!valid.access) {
       return;
     }
-    let grid = this.state.grid.slice();
-    valid.path.forEach(p => {
-      grid[p] = 8;
+    this.setState(function(prevState, props) {
+      let grid = prevState.grid.slice();
+      valid.path.forEach(p => {
+        grid[p] = 8;
+      });
+
+      return {
+        path: valid.path,
+        dest: dest,
+        grid: grid
+      };
     });
 
-    this.setState({
-      path: valid.path,
-      dest: dest,
-      grid: grid
-    });
     this.interval = setInterval(this.movePiece, 100);
   }
 
+  earnScore(fadeOut) {
+    this.setState(function(prevState, props) {
+      let grid = prevState.grid.slice();
+      let balls = prevState.balls - fadeOut.length;
+      let score = prevState.score + utils.calculateScore(fadeOut.length);
+      fadeOut.forEach(out => {
+        grid[out] = 0;
+      });
+
+      return {
+        grid: grid,
+        score: score,
+        balls: balls,
+        fadeOut: []
+      };
+    })
+  }
+
   checkBingo(grid, dest) {
-    let lines = this.calculateBalls(grid, dest, this.state.size);
+    let lines = utils.calculateBalls(grid, dest, this.state.size);
     let bingo = false;
-    let fadeOut = Array();
+    let fadeOut = [];
     lines.forEach(line => {
       if (line.length >= 4) {
         bingo = true;
@@ -124,146 +142,44 @@ class Game extends React.Component {
     });
 
     if (bingo) {
-      fadeOut = fadeOut.concat(dest);
+      fadeOut.push(dest);
       this.setState({
-        grid: grid,
         fadeOut: fadeOut,
         dest: -1,
         active: -1
       });
-      this.timer = setTimeout(() => {
-        let balls = this.state.balls - fadeOut.length;
-        let score = this.state.score + this.calculateScore(fadeOut.length);
-        fadeOut.forEach(out => {
-          grid[out] = 0;
-        });
-
-        this.setState({
-          grid: grid,
-          score: score,
-          balls: balls,
-          fadeOut: []
-        });
-      }, 500);
+      this.timer = setTimeout(this.earnScore(fadeOut), 500);
     }
     return fadeOut.length;
   }
 
-  calculateScore(balls) {
-    let score = 5;
-    balls = balls - 5;
+  pushBalls(prevState, props) {
+    let grid = prevState.grid;
+    let nexts = prevState.nexts;
+    let balls = prevState.balls;
+    let position = utils.randomPositions(grid, balls, prevState.size);
 
-    while (balls > 0) {
-      score += (1 << balls);
-      balls--;
-    }
-
-    return score;
-  }
-
-  calculateBalls(grid, dest, size) {
-    const result = Array(4);
-
-    // row
-    result[0] = Array();
-    [1, -1].forEach(shift => {
-      let row = dest + shift;
-      while (row >= 0 && row < size * size && (Math.floor(row / size) === Math.floor(dest / size))) {
-        if (grid[row] === grid[dest]) {
-          result[0] = result[0].concat(row);
-          row = row + shift;
-        } else {
-          break;
-        }
-      }
-    });
-
-    //col 
-    result[1] = Array();
-    [size, -size].forEach(shift => {
-      let col = dest + shift;
-      while (col >= 0 && col < size * size && (col % size === dest % size)) {
-        if (grid[col] === grid[dest]) {
-          result[1] = result[1].concat(col);
-          col = col + shift;
-        } else {
-          break;
-        }
-      }
-    });
-
-    //left
-    result[2] = Array();
-    [size + 1, -1 - size].forEach(shift => {
-      let left = dest + shift;
-      while (left >= 0 && left < size * size && (Math.abs(Math.floor(left / size) - Math.floor((left - shift) / size)) === 1)) {
-        if (grid[left] === grid[dest]) {
-          result[2] = result[2].concat(left);
-          left = left + shift;
-        } else {
-          break;
-        }
-      }
-    });
-
-    //right
-    result[3] = Array();
-    [size - 1, 1 - size].forEach(shift => {
-      let right = dest + shift;
-      while (right >= 0 && right < size * size && (Math.abs(Math.floor(right / size) - Math.floor((right - shift) / size)) === 1)) {
-        if (grid[right] === grid[dest]) {
-          result[3] = result[3].concat(right);
-          right = right + shift;
-        } else {
-          break;
-        }
-      }
-    });
-
-    return result;
-  }
-
-  pushNewBalls(grid, nexts) {
-    let seed = this.randomPosition();
-    let position = Array(3);
-    let balls = 0;
-    seed.forEach((pos, ball) => {
-      for (var i = 0; i < grid.length; i++) {
-        if (grid[i] === 0 && --pos === 0) {
-          grid[i] = nexts[ball];
-          position[ball] = i;
-          balls++;
-          break;
-        }
-      }
+    position.forEach((pos, i) => {
+      grid[pos] = nexts[i];
+      balls++;
     });
 
     position.forEach(pos => {
       balls -= this.checkBingo(grid, pos);
     });
-    nexts = this.randomBalls();
-    this.setState((prevState, props) => ({
+    nexts = utils.randomBalls();
+    return {
       nexts: nexts,
       grid: grid,
-      balls: prevState.balls + balls,
+      balls: balls,
       active: -1
-    }));
+    };
   }
 
   reset() {
-    let size = this.state.size;
-    this.setState({
-      score: 0,
-      active: -1,
-      dest: -1,
-      fadeOut: Array(),
-      path: Array(),
-      balls: 0
-    });
-    let grid = Array(size * size).fill(0);
-    let nexts = this.randomBalls();
-
-    this.pushNewBalls(grid, nexts);
+    let state = this.initState();
+    this.setState(state);
+    this.setState(this.pushBalls);
   }
 
   render() {

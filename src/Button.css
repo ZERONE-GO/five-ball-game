@@ -1,4 +1,10 @@
 .button {
     padding: 4px;
     color: #2A8FBD;
+    cursor: pointer;
+    width: 100px;
+}
+
+.button:hover {
+    font-weight: bold;
 }
