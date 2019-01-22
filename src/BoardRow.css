@@ -7,5 +7,6 @@
     height: 50px;
     border: 1px solid;
     text-align: center;
-    line-height: 50px
+    line-height: 50px;
+    cursor: pointer;
 }
