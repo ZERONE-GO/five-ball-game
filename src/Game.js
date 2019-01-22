@@ -26,7 +26,7 @@ class Game extends React.Component {
     this.timer && clearTimeout(this.timer);
   }
 
-  initState() {
+  initState(prevState) {
     const size = 10;
     return {
       size: size,
@@ -38,6 +38,7 @@ class Game extends React.Component {
       dest: -1,
       fadeOut: [],
       path: [],
+      gameover: false,
       history: []
     };
   }
@@ -71,10 +72,18 @@ class Game extends React.Component {
       clearInterval(this.interval);
       let grid = this.state.grid.slice();
       let dest = this.state.dest;
-      let balls = this.checkBingo(grid, dest);
-      if (balls <= 0) {
+      let bingo = this.checkBingo(grid, dest);
+      this.setState(function(prevState) {
+        return {
+          fadeOut: bingo,
+          dest: -1,
+          active: -1
+        };
+      });
+      if (bingo.length <= 0) {
         this.setState(this.pushBalls);
       }
+      this.timer = setTimeout(this.earnScore(), 500);
     }
   }
 
@@ -112,93 +121,97 @@ class Game extends React.Component {
     this.interval = setInterval(this.movePiece, 100);
   }
 
-  earnScore(fadeOut) {
+  earnScore() {
     this.setState(function(prevState, props) {
-      let grid = prevState.grid.slice();
-      let balls = prevState.balls - fadeOut.length;
-      let score = prevState.score + utils.calculateScore(fadeOut.length);
-      fadeOut.forEach(out => {
-        grid[out] = 0;
-      });
+      let fadeOut = prevState.fadeOut;
+      if (fadeOut.length > 0) {
+        let grid = prevState.grid.slice();
+        let balls = prevState.balls - fadeOut.length;
+        let score = prevState.score + utils.calculateScore(fadeOut.length);
+        fadeOut.forEach(out => {
+          grid[out] = 0;
+        });
 
-      return {
-        grid: grid,
-        score: score,
-        balls: balls,
-        fadeOut: []
-      };
+        return {
+          grid: grid,
+          score: score,
+          balls: balls,
+          fadeOut: []
+        };
+      } else {
+        if (prevState.balls >= prevState.size * prevState.size) {
+          return {
+            gameover: true
+          };
+        }
+      }
     })
   }
 
   checkBingo(grid, dest) {
     let lines = utils.calculateBalls(grid, dest, this.state.size);
-    let bingo = false;
-    let fadeOut = [];
+    let bingo = [];
     lines.forEach(line => {
       if (line.length >= 4) {
-        bingo = true;
-        fadeOut = fadeOut.concat(line);
+        bingo = bingo.concat(line);
       }
     });
 
-    if (bingo) {
-      fadeOut.push(dest);
-      this.setState({
-        fadeOut: fadeOut,
-        dest: -1,
-        active: -1
-      });
-      this.timer = setTimeout(this.earnScore(fadeOut), 500);
+    if (bingo.length >= 4) {
+      bingo.push(dest);
     }
-    return fadeOut.length;
+    return bingo;
   }
 
-  pushBalls(prevState, props) {
+  pushBalls(prevState) {
     let grid = prevState.grid;
     let nexts = prevState.nexts;
     let balls = prevState.balls;
     let position = utils.randomPositions(grid, balls, prevState.size);
+    let bingo = [];
 
     position.forEach((pos, i) => {
-      grid[pos] = nexts[i];
-      balls++;
+      if (pos >= 0) {
+        grid[pos] = nexts[i];
+        balls++;
+      }
     });
 
     position.forEach(pos => {
-      balls -= this.checkBingo(grid, pos);
+      if (pos >= 0) {
+        bingo = bingo.concat(this.checkBingo(grid, pos));
+      }
     });
     nexts = utils.randomBalls();
     return {
       nexts: nexts,
       grid: grid,
       balls: balls,
-      active: -1
+      fadeOut: bingo
     };
   }
 
   reset() {
-    let state = this.initState();
-    this.setState(state);
+    this.setState(this.initState);
     this.setState(this.pushBalls);
   }
 
   render() {
-    const nexts = this.state.nexts;
-    const grid = this.state.grid;
-
+    let gameover = this.state.gameover ? <div className="gameover-container" onClick={this.reset}><span className="gameover-text" >GAME OVER</span></div> : '';
     return (
       <div className="game">
         <div className="head">
           <Label name="Balls" value={this.state.balls} />
-          <Mooe nexts={nexts} />
+          <Mooe nexts={this.state.nexts} />
           <Label name="Score" value = {this.state.score} />
         </div>
-        <Board grid={grid} fadeOut={this.state.fadeOut} size = {this.state.size} active={this.state.active} onAction={this.onAction} />
+        <Board grid={this.state.grid} fadeOut={this.state.fadeOut} size = {this.state.size} active={this.state.active} onAction={this.onAction} />
         <div className="footer">
           <Button name="UNDO" />
           <div className="copyright"> CopyRight * Made by Zeron </div>
           <Button name="RESET" reset={this.reset} />
         </div>
+        {gameover}
       </div>
     );
   }

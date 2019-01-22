@@ -3,15 +3,15 @@ class PriorityArray {
         this.list = [];
     }
 
-    push(pos, dest, parent, real, estimate, size) {
-        let item = this.createItem(pos, dest, parent, real, estimate, size);
+    push(pos, parent, real, estimate) {
+        let item = this.createItem(pos, parent, real, estimate);
         this.list.push(item);
         this.list.sort((a, b) => {
             return b.priority - a.priority;
         });
     }
 
-    createItem(pos, dest, parent, real, estimate, size) {
+    createItem(pos, parent, real, estimate) {
         return {
             priority: real + estimate,
             real: real,
@@ -41,7 +41,7 @@ export function findPath(pos, dest, size, grid) {
     let access = false;
 
     let estimate = estimateCost(pos, dest, size);
-    priorityArray.push(pos, dest, -1, 0, estimate, size);
+    priorityArray.push(pos, -1, 0, estimate);
 
     while (!priorityArray.isEmpty()) {
         let node = priorityArray.pop();
@@ -58,7 +58,7 @@ export function findPath(pos, dest, size, grid) {
             if (row >= 0 && row < size * size && (Math.floor(row / size) === Math.floor(node.pos / size))) {
                 if (!map[row] && grid[row] === 0) {
                     estimate = estimateCost(row, dest, size);
-                    priorityArray.push(row, dest, node.pos, node.real + 1, estimate, size);
+                    priorityArray.push(row, node.pos, node.real + 1, estimate);
                 }
             }
         });
@@ -69,13 +69,13 @@ export function findPath(pos, dest, size, grid) {
             if (col >= 0 && col < size * size && (col % size === node.pos % size)) {
                 if (!map[col] && grid[col] === 0) {
                     estimate = estimateCost(col, dest, size);
-                    priorityArray.push(col, dest, node.pos, node.real + 1, estimate, size);
+                    priorityArray.push(col, node.pos, node.real + 1, estimate);
                 }
             }
         });
     }
 
-    let path = new Array();
+    let path = [];
     if (access) {
         let end = map[dest].pos;
 
@@ -91,12 +91,8 @@ export function findPath(pos, dest, size, grid) {
     };
 }
 
-function randomPiece() {
-    return Math.floor(1 + Math.random() * 7);
-}
-
 export function randomBalls() {
-    return [randomPiece(), randomPiece(), randomPiece()];
+    return [Math.floor(1 + Math.random() * 7), Math.floor(1 + Math.random() * 7), Math.floor(1 + Math.random() * 7)];
 }
 
 export function randomPositions(grid, balls, size) {
@@ -105,10 +101,12 @@ export function randomPositions(grid, balls, size) {
 
     return seeds.map(seed => {
         for (var i = 0; i < grid.length; i++) {
-            if (grid[i] === 0 && --seed === 0) {
+            if (grid[i] === 0 && --seed <= 0) {
+                grid[i] = -1;
                 return i;
             }
         }
+        return -1;
     });
 }
 
@@ -125,10 +123,10 @@ export function calculateScore(balls) {
 }
 
 export function calculateBalls(grid, dest, size) {
-    const result = Array(4);
+    const result = new Array(4);
 
     // row
-    result[0] = Array();
+    result[0] = [];
     [1, -1].forEach(shift => {
         let row = dest + shift;
         while (row >= 0 && row < size * size && (Math.floor(row / size) === Math.floor(dest / size))) {
@@ -142,7 +140,7 @@ export function calculateBalls(grid, dest, size) {
     });
 
     //col 
-    result[1] = Array();
+    result[1] = [];
     [size, -size].forEach(shift => {
         let col = dest + shift;
         while (col >= 0 && col < size * size && (col % size === dest % size)) {
@@ -156,7 +154,7 @@ export function calculateBalls(grid, dest, size) {
     });
 
     //left
-    result[2] = Array();
+    result[2] = [];
     [size + 1, -1 - size].forEach(shift => {
         let left = dest + shift;
         while (left >= 0 && left < size * size && (Math.abs(Math.floor(left / size) - Math.floor((left - shift) / size)) === 1)) {
@@ -170,7 +168,7 @@ export function calculateBalls(grid, dest, size) {
     });
 
     //right
-    result[3] = Array();
+    result[3] = [];
     [size - 1, 1 - size].forEach(shift => {
         let right = dest + shift;
         while (right >= 0 && right < size * size && (Math.abs(Math.floor(right / size) - Math.floor((right - shift) / size)) === 1)) {
