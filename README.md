@@ -1,18 +1,24 @@
-七彩连珠的小游戏，采用React JS编写，主要用于熟悉React的语法。
+七彩连珠的小游戏
+
+七彩连珠的小游戏是我学编程以来写的第一个小游戏，10年过去了，最近要学习React JS，就用React JS重新编写了这个游戏，主要用于熟悉React的语法。
 
 ![](https://github.com/ZERONE-GO/five-ball-game/blob/master/five-ball.png)
 
 主要功能模块：
-1. 寻址算法采用A*算法。
+1. 寻址算法，用js自己手写了A*算法。
+
+git clone 到本地
+
+### `npm install`
+install 工程
 
 ### `npm start`
+开发模式<br>
+会自动打开 [http://localhost:3000](http://localhost:3000).
 
-Runs the app in the development mode.<br>
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 
-The page will reload if you make edits.<br>
-You will also see any lint errors in the console.
 
+==========================================create react app教程==============================================================
 ### `npm test`
 
 Launches the test runner in the interactive watch mode.<br>
