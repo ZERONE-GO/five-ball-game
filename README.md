@@ -18,7 +18,7 @@ install 工程
 
 
 
-==========================================create react app教程==============================================================
+===create react app教程===
 ### `npm test`
 
 Launches the test runner in the interactive watch mode.<br>
