@@ -4,6 +4,7 @@ import Mooe from './Mooe';
 import Board from './Board';
 import Button from './Button';
 import * as utils from './Utils';
+import History from './History';
 import './Game.css';
 
 class Game extends React.Component {
@@ -11,11 +12,13 @@ class Game extends React.Component {
   constructor() {
     super();
     this.state = this.initState();
+    this.history = new History();
 
     this.selected = this.selected.bind(this);
     this.onAction = this.onAction.bind(this);
     this.movePiece = this.movePiece.bind(this);
     this.reset = this.reset.bind(this);
+    this.undo = this.undo.bind(this);
   }
 
   componentDidMount() {
@@ -38,8 +41,7 @@ class Game extends React.Component {
       dest: -1,
       fadeOut: [],
       path: [],
-      gameover: false,
-      history: []
+      gameover: false
     };
   }
 
@@ -101,6 +103,8 @@ class Game extends React.Component {
       return;
     }
 
+    this.history.push(this.state);
+
     let valid = utils.findPath(this.state.active, dest, this.state.size, this.state.grid);
     if (!valid.access) {
       return;
@@ -145,7 +149,7 @@ class Game extends React.Component {
           };
         }
       }
-    })
+    });
   }
 
   checkBingo(grid, dest) {
@@ -192,8 +196,16 @@ class Game extends React.Component {
   }
 
   reset() {
+    this.history.clear();
     this.setState(this.initState);
     this.setState(this.pushBalls);
+  }
+
+  undo() {
+    let state = this.history.pop();
+    state && this.setState(function(preState) {
+      return state;
+    });
   }
 
   render() {
@@ -207,9 +219,9 @@ class Game extends React.Component {
         </div>
         <Board grid={this.state.grid} fadeOut={this.state.fadeOut} size = {this.state.size} active={this.state.active} onAction={this.onAction} />
         <div className="footer">
-          <Button name="UNDO" />
+          <Button name="UNDO" onAction={this.undo}/>
           <div className="copyright"> CopyRight * Made by Zeron </div>
-          <Button name="RESET" reset={this.reset} />
+          <Button name="RESET" onAction={this.reset} />
         </div>
         {gameover}
       </div>
