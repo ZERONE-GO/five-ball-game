@@ -23,7 +23,6 @@ class Game extends React.Component {
 
   componentDidMount() {
     this.setState(this.pushBalls);
-    this.history.push(this.state);
   }
 
   componentWillUnmount() {
@@ -104,6 +103,8 @@ class Game extends React.Component {
       return;
     }
 
+    this.history.push(this.state);
+
     let valid = utils.findPath(this.state.active, dest, this.state.size, this.state.grid);
     if (!valid.access) {
       return;
@@ -149,7 +150,6 @@ class Game extends React.Component {
         }
       }
     });
-    this.history.push(this.state);
   }
 
   checkBingo(grid, dest) {
@@ -196,6 +196,7 @@ class Game extends React.Component {
   }
 
   reset() {
+    this.history.clear();
     this.setState(this.initState);
     this.setState(this.pushBalls);
   }

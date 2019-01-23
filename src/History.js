@@ -12,4 +12,8 @@ export default class History {
         return this.history.pop();
     }
 
+    clear() {
+        this.history = [];
+    }
+
 }
